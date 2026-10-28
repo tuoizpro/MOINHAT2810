@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="VNelD">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>VNelD</title>
+<style>
+html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}
+video{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+#tap{display:none;position:fixed;inset:0;width:100%;height:100%;border:0;background:transparent;color:transparent;cursor:pointer}
+</style>
+</head>
+<body>
+<video id="v" src="video.mp4" autoplay muted playsinline webkit-playsinline preload="auto" disablepictureinpicture></video>
+<button id="tap" type="button" aria-label="Chạm để phát video">Chạm để phát video</button>
+<script>
+(()=>{
+  const v=document.getElementById('v');
+  const tap=document.getElementById('tap');
+  let finished=false;
+  v.defaultMuted=true;
+  v.muted=true;
+  v.playsInline=true;
+  function onEnded(){
+    finished=true;
+    tap.style.display='none';
+    v.pause();
+    // Keep the last visible frame when playback completes.
+    if(Number.isFinite(v.duration)&&v.duration>0){
+      try{v.currentTime=Math.max(0,v.duration-0.08)}catch(_){ }
+    }
+  }
+  v.addEventListener('ended',onEnded);
+  async function tryPlay(){
+    if(finished||!v.paused)return;
+    try{
+      v.muted=true;
+      await v.play();
+      tap.style.display='none';
+    }catch(_){
+      // Some browsers require the first user interaction to permit playback.
+      tap.style.display='block';
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',tryPlay,{once:true});
+  else tryPlay();
+  window.addEventListener('pageshow',tryPlay);
+  v.addEventListener('loadeddata',tryPlay);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)tryPlay()});
+  tap.addEventListener('click',tryPlay);
+  document.addEventListener('pointerdown',()=>{if(!finished)tryPlay()},{passive:true});
+})();
+</script>
+</body>
+</html>
